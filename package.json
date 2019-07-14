@@ -1,0 +1,15 @@
+{
+  "name": "audio-analyzer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "Fabio Siliberto",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^5.0.6"
+  },
+  "dependencies": {}
+}
