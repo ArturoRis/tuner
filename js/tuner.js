@@ -1,7 +1,7 @@
 const Tuner = function() {
-  this.middleA = 440
-  this.semitone = 69
-  this.bufferSize = 4096
+  this.middleA = 440;
+  this.semitone = 69;
+  this.bufferSize = 4096;
   this.noteStrings = [
     'C',
     'C♯',
@@ -15,13 +15,13 @@ const Tuner = function() {
     'A',
     'A♯',
     'B'
-  ]
+  ];
 
   this.initGetUserMedia()
-}
+};
 
 Tuner.prototype.initGetUserMedia = function() {
-  window.AudioContext = window.AudioContext || window.webkitAudioContext
+  window.AudioContext = window.AudioContext || window.webkitAudioContext;
   if (!window.AudioContext) {
     return alert('AudioContext not supported')
   }
@@ -38,7 +38,7 @@ Tuner.prototype.initGetUserMedia = function() {
     navigator.mediaDevices.getUserMedia = function(constraints) {
       // First get ahold of the legacy getUserMedia, if present
       const getUserMedia =
-        navigator.webkitGetUserMedia || navigator.mozGetUserMedia
+        navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 
       // Some browsers just don't implement it - return a rejected promise with an error
       // to keep a consistent interface
@@ -52,22 +52,28 @@ Tuner.prototype.initGetUserMedia = function() {
       })
     }
   }
-}
+};
+
+Tuner.prototype.isRecording = function () {
+  return this.recording;
+};
 
 Tuner.prototype.startRecord = function () {
-  const self = this
+  const self = this;
+  self.recording = true;
   navigator.mediaDevices
     .getUserMedia({ audio: true })
     .then(function(stream) {
-      self.audioContext.createMediaStreamSource(stream).connect(self.analyser)
-      self.analyser.connect(self.scriptProcessor)
-      self.scriptProcessor.connect(self.audioContext.destination)
+      self.audioContext.createMediaStreamSource(stream).connect(self.analyser);
+      self.analyser.connect(self.scriptProcessor);
+      self.scriptProcessor.connect(self.audioContext.destination);
+      if (!self.mediaRecorder)
       self.scriptProcessor.addEventListener('audioprocess', function(event) {
         const frequency = self.pitchDetector.do(
           event.inputBuffer.getChannelData(0)
-        )
+        );
         if (frequency && self.onNoteDetected) {
-          const note = self.getNote(frequency)
+          const note = self.getNote(frequency);
           self.onNoteDetected({
             name: self.noteStrings[note % 12],
             value: note,
@@ -76,23 +82,44 @@ Tuner.prototype.startRecord = function () {
             frequency: frequency
           })
         }
-      })
+      });
+      self.mediaRecorder = new window.MediaRecorder(stream);
+      self.chunks = [];
+      self.mediaRecorder.ondataavailable = function(evt) {
+        // push each chunk (blobs) in an array
+        self.chunks.push(evt.data);
+      };
+      self.mediaRecorder.onstop = function(evt) {
+        // Make blob out of our blobs, and open it.
+        var blob = new Blob(self.chunks, { 'type' : 'audio/ogg; codecs=opus' });
+        document.querySelector("audio").src = URL.createObjectURL(blob);
+      };
+      self.mediaRecorder.start();
     })
     .catch(function(error) {
       alert(error.name + ': ' + error.message)
     })
-}
+};
+
+Tuner.prototype.stopRecord = function () {
+  const self = this;
+  self.recording = false;
+  self.mediaRecorder.stop();
+  self.scriptProcessor.disconnect();
+  self.analyser.disconnect();
+  self.audioContext.close();
+};
 
 Tuner.prototype.init = function() {
-  this.audioContext = new window.AudioContext()
-  this.analyser = this.audioContext.createAnalyser()
+  this.audioContext = new window.AudioContext();
+  this.analyser = this.audioContext.createAnalyser();
   this.scriptProcessor = this.audioContext.createScriptProcessor(
     this.bufferSize,
     1,
     1
-  )
+  );
 
-  const self = this
+  const self = this;
 
   Aubio().then(function(aubio) {
     self.pitchDetector = new aubio.Pitch(
@@ -100,10 +127,10 @@ Tuner.prototype.init = function() {
       self.bufferSize,
       1,
       self.audioContext.sampleRate
-    )
-    self.startRecord()
+    );
+    // self.startRecord()
   })
-}
+};
 
 /**
  * get musical note from frequency
@@ -112,9 +139,9 @@ Tuner.prototype.init = function() {
  * @returns {number}
  */
 Tuner.prototype.getNote = function(frequency) {
-  const note = 12 * (Math.log(frequency / this.middleA) / Math.log(2))
+  const note = 12 * (Math.log(frequency / this.middleA) / Math.log(2));
   return Math.round(note) + this.semitone
-}
+};
 
 /**
  * get the musical note's standard frequency
@@ -124,7 +151,7 @@ Tuner.prototype.getNote = function(frequency) {
  */
 Tuner.prototype.getStandardFrequency = function(note) {
   return this.middleA * Math.pow(2, (note - this.semitone) / 12)
-}
+};
 
 /**
  * get cents difference between given frequency and musical note's standard frequency
@@ -137,7 +164,7 @@ Tuner.prototype.getCents = function(frequency, note) {
   return Math.floor(
     (1200 * Math.log(frequency / this.getStandardFrequency(note))) / Math.log(2)
   )
-}
+};
 
 /**
  * play the musical note
@@ -146,14 +173,14 @@ Tuner.prototype.getCents = function(frequency, note) {
  */
 Tuner.prototype.play = function(frequency) {
   if (!this.oscillator) {
-    this.oscillator = this.audioContext.createOscillator()
-    this.oscillator.connect(this.audioContext.destination)
+    this.oscillator = this.audioContext.createOscillator();
+    this.oscillator.connect(this.audioContext.destination);
     this.oscillator.start()
   }
   this.oscillator.frequency.value = frequency
-}
+};
 
 Tuner.prototype.stop = function() {
-  this.oscillator.stop()
+  this.oscillator.stop();
   this.oscillator = null
-}
+};
