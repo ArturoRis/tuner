@@ -64,25 +64,7 @@ Tuner.prototype.startRecord = function () {
   navigator.mediaDevices
     .getUserMedia({ audio: true })
     .then(function(stream) {
-      self.audioContext.createMediaStreamSource(stream).connect(self.analyser);
-      self.analyser.connect(self.scriptProcessor);
-      self.scriptProcessor.connect(self.audioContext.destination);
-      if (!self.mediaRecorder)
-      self.scriptProcessor.addEventListener('audioprocess', function(event) {
-        const frequency = self.pitchDetector.do(
-          event.inputBuffer.getChannelData(0)
-        );
-        if (frequency && self.onNoteDetected) {
-          const note = self.getNote(frequency);
-          self.onNoteDetected({
-            name: self.noteStrings[note % 12],
-            value: note,
-            cents: self.getCents(frequency, note),
-            octave: parseInt(note / 12) - 1,
-            frequency: frequency
-          })
-        }
-      });
+      self.connectStream(stream);
       self.mediaRecorder = new window.MediaRecorder(stream);
       self.chunks = [];
       self.mediaRecorder.ondataavailable = function(evt) {
@@ -99,6 +81,29 @@ Tuner.prototype.startRecord = function () {
     .catch(function(error) {
       alert(error.name + ': ' + error.message)
     })
+};
+
+Tuner.prototype.connectStream = function (stream) {
+  const self = this;
+  self.audioContext.createMediaStreamSource(stream).connect(self.analyser);
+  self.analyser.connect(self.scriptProcessor);
+  self.scriptProcessor.connect(self.audioContext.destination);
+  // if (!self.mediaRecorder)
+  self.scriptProcessor.addEventListener('audioprocess', function(event) {
+    const frequency = self.pitchDetector.do(
+        event.inputBuffer.getChannelData(0)
+    );
+    if (frequency && self.onNoteDetected) {
+      const note = self.getNote(frequency);
+      self.onNoteDetected({
+        name: self.noteStrings[note % 12],
+        value: note,
+        cents: self.getCents(frequency, note),
+        octave: parseInt(note / 12) - 1,
+        frequency: frequency
+      })
+    }
+  });
 };
 
 Tuner.prototype.stopRecord = function () {
@@ -183,4 +188,16 @@ Tuner.prototype.play = function(frequency) {
 Tuner.prototype.stop = function() {
   this.oscillator.stop();
   this.oscillator = null
+};
+
+Tuner.prototype.startPlayback = function () {
+  console.log('Start playback', audioElement);
+  this.connectStream(audioElement.captureStream());
+};
+
+Tuner.prototype.stopPlayback = function () {
+  const self = this;
+  self.scriptProcessor.disconnect();
+  self.analyser.disconnect();
+  self.audioContext.close();
 };

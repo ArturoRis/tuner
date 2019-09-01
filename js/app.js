@@ -62,5 +62,23 @@ document.getElementById('startStop').onclick = function (e) {
     e.target.innerHTML = 'Stop';
     app.tuner.init();
     app.tuner.startRecord();
+    URL.revokeObjectURL(srcPlayback);
   }
+};
+
+var audioElement = document.getElementById('audio');
+let srcPlayback;
+audioElement.onplay = function (e) {
+  app.tuner.init();
+  app.tuner.startPlayback();
+};
+
+audioElement.onpause = function (e) {
+  app.tuner.stopPlayback();
+};
+
+document.getElementById('inputUpload').onchange = function (ev) {
+  URL.revokeObjectURL(srcPlayback);
+  srcPlayback = URL.createObjectURL(ev.target.files[0]);
+  audioElement.src = srcPlayback;
 };
