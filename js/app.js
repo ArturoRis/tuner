@@ -1,4 +1,3 @@
-const Swal = require('sweetalert2');
 
 const Application = function() {
   this.tuner = new Tuner();
@@ -21,10 +20,8 @@ Application.prototype.start = function() {
     }
   };
 
-  Swal.fire('Welcome online tuner!').then(function() {
-    self.tuner.init();
-    self.frequencyData = new Uint8Array(self.tuner.analyser.frequencyBinCount)
-  });
+  self.tuner.init();
+  self.frequencyData = new Uint8Array(self.tuner.analyser.frequencyBinCount)
 
   if (!/Android/i.test(navigator.userAgent)) {
     this.updateFrequencyBars()
