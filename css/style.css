@@ -3,7 +3,8 @@ html {
 }
 
 body {
-  position: fixed;
+  overflow-y: scroll;
+  overflow-x: hidden;
   font-family: sans-serif;
   color: #2c3e50;
   margin: 0;
