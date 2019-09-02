@@ -80,7 +80,8 @@ Notes.prototype.update = function(note) {
 
 Notes.prototype.toggleAutoMode = function() {
   if (this.isAutoMode) {
-    this.clearActive()
+    this.clearActive();
+    this.tuner.init();
   }
   this.isAutoMode = !this.isAutoMode
 }
