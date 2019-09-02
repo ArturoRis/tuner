@@ -49,14 +49,14 @@ Application.prototype.toggleAutoMode = function() {
 const app = new Application();
 app.start();
 
-document.getElementById('toggleAutoMode').onclick = app.toggleAutoMode.bind(app);
+// document.getElementById('toggleAutoMode').onclick = app.toggleAutoMode.bind(app);
 
 document.getElementById('startStop').onclick = function (e) {
   if (app.tuner.isRecording()){
-    e.target.innerHTML = 'Start';
+    e.target.innerHTML = 'START';
     app.tuner.stopRecord();
   } else {
-    e.target.innerHTML = 'Stop';
+    e.target.innerHTML = 'STOP';
     app.tuner.init();
     app.tuner.startRecord();
     URL.revokeObjectURL(srcPlayback);
@@ -64,7 +64,10 @@ document.getElementById('startStop').onclick = function (e) {
 };
 
 var audioElement = document.getElementById('audio');
+const uploadButton = document.getElementById('uploadButton');
+const uploadInput = document.getElementById('inputUpload');
 let srcPlayback;
+
 audioElement.onplay = function (e) {
   app.tuner.init();
   app.tuner.startPlayback();
@@ -74,8 +77,21 @@ audioElement.onpause = function (e) {
   app.tuner.stopPlayback();
 };
 
-document.getElementById('inputUpload').onchange = function (ev) {
+uploadInput.onchange = function (ev) {
   URL.revokeObjectURL(srcPlayback);
-  srcPlayback = URL.createObjectURL(ev.target.files[0]);
+  const file = ev.target.files[0];
+  srcPlayback = URL.createObjectURL(file);
   audioElement.src = srcPlayback;
+  audioElement.load();
+  uploadButton.innerText = 'FILE: ' + file.name;
+};
+
+document.getElementById('clearAudio').onclick = function () {
+  audioElement.removeAttribute('src');
+  audioElement.load();
+  uploadButton.innerText = 'LOAD'
+};
+
+uploadButton.onclick = function () {
+    uploadInput.click()
 };

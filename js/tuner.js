@@ -74,7 +74,8 @@ Tuner.prototype.startRecord = function () {
       self.mediaRecorder.onstop = function(evt) {
         // Make blob out of our blobs, and open it.
         var blob = new Blob(self.chunks, { 'type' : 'audio/ogg; codecs=opus' });
-        document.querySelector("audio").src = URL.createObjectURL(blob);
+        audioElement.src = URL.createObjectURL(blob);
+        audioElement.load();
       };
       self.mediaRecorder.start();
     })
