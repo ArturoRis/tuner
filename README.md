@@ -1,6 +1,6 @@
 # TUNER
 
-Online tuner available [here](https://arturoris.github.io/tuner/).
+Online tuner available [here](https://silibdev.github.io/tuner/).
 
 &nbsp;
 
